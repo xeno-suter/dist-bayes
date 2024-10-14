@@ -38,7 +38,7 @@ the string representation instead of the pickle, right?
 
 Something about that logic seems wrong to me, but I can't see what it
 is.  Maybe pickling is good for heterogeneous data types, but every
-value of our big dictionary is going to have the same type, so there's a
+value of our big Dictionary is going to have the same type, so there's a
 ton of redundancy.  I guess that explains why it compressed so well.
 
 Neale
