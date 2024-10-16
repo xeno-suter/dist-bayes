@@ -3,13 +3,13 @@
  * Contains the word itself, the number of times it appears in ham emails, and the number of times it appears in spam emails.
  */
 public class Word {
-    private static final double INCREMENT_SIZE = 1.0;
+    private static final int INCREMENT_SIZE = 1;
 
     private final String word;
-    private double hamCount;
-    private double spamCount;
+    private int hamCount;
+    private int spamCount;
 
-    public Word(String word, double initialHamCount, double initialSpamCount) {
+    public Word(String word, int initialHamCount, int initialSpamCount) {
         this.word = word;
         this.hamCount = initialHamCount;
         this.spamCount = initialSpamCount;
@@ -19,11 +19,11 @@ public class Word {
         return word;
     }
 
-    public double getHamCount() {
+    public int getHamCount() {
         return hamCount;
     }
 
-    public double getSpamCount() {
+    public int getSpamCount() {
         return spamCount;
     }
 
@@ -36,20 +36,7 @@ public class Word {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        Word other = (Word) obj;
-        return word.equalsIgnoreCase(other.word);
-    }
-
-    @Override
-    public int hashCode() {
-        return word.toLowerCase().hashCode();
-    }
-
-    @Override
     public String toString() {
-        return String.format("Word: '%s', Ham Count: %.2f, Spam Count: %.2f", word, hamCount, spamCount);
+        return String.format("Word: '%s', Ham Count: %d, Spam Count: %d", word, hamCount, spamCount);
     }
 }

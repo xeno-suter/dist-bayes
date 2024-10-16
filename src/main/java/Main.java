@@ -3,80 +3,52 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        // Train the classifier with HAM and SPAM data from the training directories
         Trainer train = new Trainer();
         train.learnDirectory("src/main/resources/ham-anlern", ClassificationType.HAM);
         train.learnDirectory("src/main/resources/spam-anlern", ClassificationType.SPAM);
 
+        // Create a spam filter using the trained dictionary
         SpamFilter filter = new SpamFilter(train.getDictionary());
 
-        int countActualSpamMail = 0;
-        int countActualHamMail = 0;
+        // Perform the classification for calibration and testing
+        classifyAndPrintResults(filter, "src/main/resources/spam-kallibrierung", "src/main/resources/ham-kallibrierung", "kallibrierung");
+        classifyAndPrintResults(filter, "src/main/resources/spam-test", "src/main/resources/ham-test", "Test");
 
-        int totalSpamMail = 0;
-        int totalHamMail = 0;
-
-        File[] spamFiles = new TextFileReader().listFiles("src/main/resources/spam-kallibrierung");
-        for (File file : spamFiles) {
-            ClassificationType classification = filter.classifyMail(file);
-            if (classification == ClassificationType.SPAM) {
-                countActualSpamMail++;
-            } else {
-                countActualHamMail++;
-            }
-            totalSpamMail++;
-        }
-
-        File[] hamFiles = new TextFileReader().listFiles("src/main/resources/ham-kallibrierung");
-        for (File file : hamFiles) {
-            ClassificationType classification = filter.classifyMail(file);
-            if (classification == ClassificationType.HAM) {
-                countActualHamMail++;
-            } else {
-                countActualSpamMail++;
-            }
-            totalHamMail++;
-        }
-
-        double spamPrecision = (double) countActualSpamMail / (countActualSpamMail + countActualHamMail);
-        double hamPrecision = (double) countActualHamMail / (countActualHamMail + countActualSpamMail);
-
-        System.out.println("kallibrierung Spam Precision: " + spamPrecision + " " + countActualSpamMail + "/" + totalSpamMail);
-        System.out.println("kallibrierung Ham Precision: " + hamPrecision + " " + countActualHamMail + "/" + totalHamMail);
-
-        countActualSpamMail = 0;
-        countActualHamMail = 0;
-
-        totalSpamMail = 0;
-        totalHamMail = 0;
-
-        File[] spamFilesTest = new TextFileReader().listFiles("src/main/resources/spam-test");
-        for (File file : spamFilesTest) {
-            ClassificationType classification = filter.classifyMail(file);
-            if (classification == ClassificationType.SPAM) {
-                countActualSpamMail++;
-            } else {
-                countActualHamMail++;
-            }
-            totalSpamMail++;
-        }
-
-        File[] hamFilesTest = new TextFileReader().listFiles("src/main/resources/ham-test");
-        for (File file : hamFilesTest) {
-            ClassificationType classification = filter.classifyMail(file);
-            if (classification == ClassificationType.HAM) {
-                countActualHamMail++;
-            } else {
-                countActualSpamMail++;
-            }
-            totalHamMail++;
-        }
-
-        spamPrecision = (double) countActualSpamMail / (countActualSpamMail + countActualHamMail);
-        hamPrecision = (double) countActualHamMail / (countActualHamMail + countActualSpamMail);
-
-        System.out.println("Test Spam Precision: " + spamPrecision + " " + countActualSpamMail + "/" + totalSpamMail);
-        System.out.println("Test Ham Precision: " + hamPrecision + " " + countActualHamMail + "/" + totalHamMail);
+        // Output additional configuration values
         System.out.println("Alpha: " + Dictionary.ALPHA);
         System.out.println("Threshold: " + SpamFilter.THRESHOLD);
+    }
+
+    private static void classifyAndPrintResults(SpamFilter filter, String spamDir, String hamDir, String phase) throws IOException {
+        int[] spamResults = classifyFiles(filter, spamDir, ClassificationType.SPAM);
+        int[] hamResults = classifyFiles(filter, hamDir, ClassificationType.HAM);
+
+        double spamPrecision = calculatePrecision(spamResults[0], spamResults[1]);
+        double hamPrecision = calculatePrecision(hamResults[0], hamResults[1]);
+
+        System.out.println(phase + " Spam Precision: " + spamPrecision + " " + spamResults[0] + "/" + spamResults[1]);
+        System.out.println(phase + " Ham Precision: " + hamPrecision + " " + hamResults[0] + "/" + hamResults[1]);
+    }
+
+    private static int[] classifyFiles(SpamFilter filter, String dirPath, ClassificationType expectedType) throws IOException {
+        int countCorrect = 0;
+        int total = 0;
+
+        File[] files = new TextFileReader().listFiles(dirPath);
+
+        for (File file : files) {
+            ClassificationType classification = filter.classifyMail(file);
+            if (classification == expectedType) {
+                countCorrect++;
+            }
+            total++;
+        }
+
+        return new int[]{countCorrect, total};
+    }
+
+    private static double calculatePrecision(int correct, int total) {
+        return (double) correct / total;
     }
 }
