@@ -1,43 +1,31 @@
-
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class SpamFilter {
     private final Dictionary dictionary;
     private final MailReader mailReader;
-    public static final double THRESHOLD = 0.5;
+
+    public static final double THRESHOLD = 0.8; // 0 .. 1 threshold for spam classification
 
     public SpamFilter(Dictionary dictionary) {
         this.dictionary = dictionary;
         this.mailReader = new TextFileReader();
     }
 
+    // Calculate the spam probability of the given email
     public double calculateSpamProbability(File email) throws IOException {
-        // we use logs because otherwise the number we be to tiny to work with double.
-        double spamProbability = Math.log(0.5);
-        double hamProbability = Math.log(0.5);
+        double n = 0;
+        for (String word : mailReader.getWords(email)) {
+            double p = dictionary.getSpamProbabilityOfWord(word);
+            double q = dictionary.getHamProbabilityOfWord(word);
 
-        List<String> words = mailReader.getWords(email);
-        // Set<String> words = new HashSet<>(mailReader.getWords(email));
-
-        // multiply (add because of math.log) the probability of each word to the overall probability
-        for (String word : words){
-            double wordSpamProbability = Math.log(dictionary.getSpamProbabilityOfWord(word));
-            double wordHamProbability = Math.log(dictionary.getHamProbabilityOfWord(word));
-
-            spamProbability += wordSpamProbability;
-            hamProbability += wordHamProbability;
+            n += Math.log((1 - p) / (1 - q)) - Math.log(p / q);
         }
 
-        // used when not using math.log
-//        double totalProbability = spamProbability + hamProbability;
-//        return spamProbability / totalProbability; // 0 .. 1
-        return 1 / (1 + Math.exp(hamProbability - spamProbability));
+        return 1 / (1 + Math.exp(n));
     }
 
+    // Classify the email as HAM or SPAM based on the threshold
     public ClassificationType classifyMail(File email) throws IOException {
         double spamProbability = calculateSpamProbability(email);
         // System.out.println(spamProbability);
